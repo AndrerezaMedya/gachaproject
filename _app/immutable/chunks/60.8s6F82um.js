@@ -1,0 +1,1 @@
+let e=!1,l=!1;function t(){e=!0}const a=Object.freeze(Object.defineProperty({__proto__:null},Symbol.toStringTag,{value:"Module"})),o=Object.freeze(Object.defineProperty({__proto__:null},Symbol.toStringTag,{value:"Module"}));export{a as _,o as a,t as e,e as l,l as t};

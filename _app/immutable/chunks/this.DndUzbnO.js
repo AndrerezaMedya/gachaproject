@@ -1,0 +1,1 @@
+import{B,C as T,D as c,F as q,S as x}from"./runtime.C-1Rt1oD.js";function k(i,r){return i===r||(i==null?void 0:i[x])===r}function C(i={},r,S,h){return B(()=>{var s,f;return T(()=>{s=f,f=(h==null?void 0:h())||[],c(()=>{i!==S(...f)&&(r(i,...f),s&&k(S(...s),i)&&r(null,...s))})}),()=>{q(()=>{f&&k(S(...f),i)&&r(null,...f)})}}),i}export{C as b};

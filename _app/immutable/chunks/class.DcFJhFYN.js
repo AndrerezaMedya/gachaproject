@@ -1,0 +1,1 @@
+import{t as c}from"./attributes.BOLiNNFk.js";import{k as a}from"./runtime.C-1Rt1oD.js";function _(s,f,r,i,p,l){var e=s.__className;if(a||e!==r||e===void 0){var t=c(r,i);(!a||t!==s.getAttribute("class"))&&(t==null?s.removeAttribute("class"):s.className=t),s.__className=r}return l}export{_ as s};

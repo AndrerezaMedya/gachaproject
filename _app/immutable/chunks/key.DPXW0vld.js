@@ -1,0 +1,1 @@
+import{ax as c,aE as i,aF as _,j as h,k as r,o as k,z as y,y as d,U as u,A as l}from"./runtime.C-1Rt1oD.js";function I(f,n,o){r&&k();var e=f,s=u,a,t=c()?i:_;h(()=>{t(s,s=n())&&(a&&y(a),a=d(()=>o(e)))}),r&&(e=l)}export{I as k};
