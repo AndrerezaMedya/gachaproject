@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asrama Salman - Coaching Form</title>
+    <link rel="icon" href="https://i.imgur.com/iAHp5lq.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
+
+        :root {
+            --bg-primary: #f4f4f5;
+            --container-bg: #ffffff;
+            --text-primary: #1c1e21; 
+            --text-secondary: #f5f5f5;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --slider-track-color: #ddd;
+            --slider-thumb-color: #007bff;
+            --bg-start: var(--bg-primary);
+            --bg-end: var(--bg-primary);
+            --container-start: var(--container-bg);
+            --container-end: var(--container-bg);
+        }
+
+        html.dark-mode {
+            --bg-primary: #121212;
+            --container-bg: #1e1e1e;
+            --text-primary: #f0f0f0; 
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --slider-track-color: #444;
+        }
+
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--bg-primary);
+            position: relative;
+            z-index: 1;
+            transition: color 0.5s ease-in-out, background-color 0.5s ease-in-out;
+            color: var(--text-primary);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to bottom, var(--bg-start), var(--bg-end));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        body.theme-active::before { opacity: 1; }
+        
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1;
+        }
+
+        .selection-container, .form-container {
+            background-image: linear-gradient(to bottom, var(--container-start), var(--container-end));
+            box-shadow: 0 8px 32px var(--shadow-color);
+            padding: 2rem 2rem; 
+            border-radius: 16px;
+            text-align: center; 
+            width: 800px;
+            transition: background-image 0.5s ease, box-shadow 0.5s ease;
+        }
+        
+        .story-textarea {
+            width: 100%;
+            height: 150px;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .story-textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+
+        #average-message-desktop { text-align: center; font-weight: bold; margin: 1.5rem 0; color: var(--text-primary); font-size: 1.1rem; }
+        #average-message-mobile { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--container-bg); padding: 1rem; color: var(--text-primary); text-align: center; font-weight: bold; font-size: 1em; box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08); border-top: 1px solid #e0e0e0; z-index: 100; transform: translateY(100%); transition: transform 0.4s ease-out, visibility 0.4s, background-color 0.5s ease; visibility: hidden; }
+        #average-message-mobile.visible-mobile { transform: translateY(0); visibility: visible; }
+        
+        .selection-container h1, .selection-container h2, .form-container h2, .coach-item p, .control-group label { color: var(--text-primary); transition: color 0.5s ease; }
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 2rem; }
+        .coach-item { cursor: pointer; text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-radius: 15px; overflow: hidden; }
+        .coach-item img { width: 150px; height: 150px; object-fit: contain; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .coach-item p { margin-top: 0.75rem; font-size: 1rem; font-weight: bold; }
+        h1, h2 { color: var(--text-primary); }
+
+        .member-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+        .member-item { background-color: rgba(120, 120, 120, 0.1); color: var(--text-primary); border: 1px solid rgba(120, 120, 120, 0.2); padding: 1rem; border-radius: 8px; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; }
+        body.theme-active .member-item { color: var(--text-secondary); border: 1px solid rgba(255, 255, 255, 0.2); }
+        body.theme-active .member-item:hover { background-color: rgba(240, 245, 245, 0.2); }
+
+
+        .col-container { display: flex; flex-wrap: wrap; gap: 2rem; max-width: 900px; margin: auto; }
+        .col-chart-container { flex: 1; min-width: 300px; max-width: 400px; display: grid; place-items: center; border-radius: 12px; align-self: center; }
+        #myChart { background-color: white; padding: 1.5rem; border-radius: 12px; max-width: 100%; }
+        .col-controls-container { flex: 1; min-width: 300px; display: flex; flex-direction: column; justify-content: center; }
+        .control-group { margin-bottom: 1rem; }
+        .control-group label { display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 0.5rem; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            background: linear-gradient(to right, 
+                var(--slider-color, var(--slider-thumb-color)) 0%, 
+                var(--slider-color, var(--slider-thumb-color)) var(--slider-percent, 50%), 
+                var(--slider-track-color) var(--slider-percent, 50%), 
+                var(--slider-track-color) 100%);
+        }
+        input[type="range"]:hover { opacity: 1; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--slider-color, var(--slider-thumb-color));
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--slider-color, var(--slider-thumb-color));
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn { border: none; border-radius: 8px; padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient(120deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 80%); transform: skewX(-25deg); transition: left 0.5s ease-in-out; }
+        .btn-primary:hover::before { left: 125%; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-success:hover { background-color: #1e7e34; }
+        .btn-success::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient(120deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 80%); transform: skewX(-25deg); transition: left 0.5s ease-in-out; }
+        .btn-success:hover::before { left: 125%; }
+        .btn-secondary { background-color: #6c757d; color: white; padding: 0.5rem 1rem; font-size: 0.9rem; }
+        .btn-secondary:hover { background-color: #5a6268; transform: scale(1.05); }
+        .back-btn span { display: inline-block; transition: transform 0.2s ease-out; }
+        .back-btn:hover span { transform: translateX(-4px); }
+        .coach-item:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .member-item:hover { background-color: rgba(120, 120, 120, 0.1); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+
+        .context-btn { background: none; color: #007bff; cursor: pointer; padding: 0; position: relative; border: none; }
+        .context-btn:focus, .context-btn:active { outline: none; -webkit-tap-highlight-color: transparent; }
+        .context-btn::after { content: ''; position: absolute; width: 0; height: 2px; display: block; margin-top: 2px; right: 50%; background: #007bff; transition: width 0.3s ease, right 0.3s ease; }
+        .context-btn:hover::after, .context-btn:focus::after { width: 100%; right: 0; }
+        #submitBtn:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #status-message { text-align: center; margin-top: 1rem; font-weight: bold; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background: var(--container-bg); color: var(--text-primary); padding: 2rem; border-radius: 16px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; text-align: left; transition: background-color 0.5s ease, color 0.5s ease; }
+        .modal-content h2 { color: var(--text-primary); margin-top: 0; }
+        .modal-content dl dt { font-weight: bold; margin-top: 1rem; }
+        .modal-content dl dd { margin-left: 0; color: #555; }
+        html.dark-mode .modal-content dl dd { color: #ccc; }
+        .thank-you-container { padding: 4rem 2rem; }
+        .thank-you-message { font-size: 1.8rem; font-weight: bold; color: var(--text-primary); }
+        .coach-signature { font-size: 1.2rem; margin-top: 2rem; font-style: italic; color: var(--text-primary); }
+        #voice-verify-modal .modal-content { text-align: center; }
+        #mic-btn { background: #dc3545; color: white; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 2rem; cursor: pointer; margin: 1rem 0; }
+        #voice-status { font-weight: bold; height: 1.5rem; }
+        #voice-submit-btn:disabled { background-color: #cccccc; }
+        
+        /* Floating Action Buttons */
+        #theme-toggle-btn { position: fixed; bottom: 20px; right: 80px; width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.9); border-radius: 50%; cursor: pointer; z-index: 1002; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s ease, background-color 0.3s, bottom 0.4s ease-out; }
+        #theme-toggle-btn:hover { transform: scale(1.1); }
+        #theme-toggle-btn svg { width: 28px; height: 28px; fill: #333; }
+        html.dark-mode #theme-toggle-btn { background-color: rgba(40, 40, 40, 0.9); }
+        html.dark-mode #theme-toggle-btn svg { fill: #f0f0f0; }
+
+        #audio-control-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.9); border-radius: 50%; cursor: pointer; z-index: 1002; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s ease, background-color 0.3s, bottom 0.4s ease-out; }
+        #audio-control-btn:hover { transform: scale(1.1); }
+        #audio-control-btn.panel-open { background-color: #e9e9e9; }
+        #audio-control-btn svg { width: 28px; height: 28px; fill: #333; }
+        html.dark-mode #audio-control-btn { background-color: rgba(40, 40, 40, 0.9); }
+        html.dark-mode #audio-control-btn svg { fill: #f0f0f0; }
+
+        #music-hint-popup { position: fixed; bottom: 80px; right: 20px; background-color: #333; color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; z-index: 1001; opacity: 0; visibility: hidden; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s, bottom 0.4s ease-out; }
+        #music-hint-popup.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+        #music-player-panel { position: fixed; bottom: 80px; right: 20px; width: 280px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 1001; padding: 15px; color: #333; transform: scale(0.95) translateY(20px); opacity: 0; visibility: hidden; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, visibility 0.3s, bottom 0.4s ease-out; }
+        html.dark-mode #music-player-panel { background: rgba(30, 30, 30, 0.85); color: #f0f0f0; }
+        #music-player-panel.visible { transform: scale(1) translateY(0); opacity: 1; visibility: visible; }
+        .player-section { margin-bottom: 15px; }
+        .player-section:last-child { margin-bottom: 0; }
+        .player-section h4 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px; transition: color 0.3s, border-color 0.3s; }
+        html.dark-mode .player-section h4 { color: #aaa; border-bottom: 1px solid #444; }
+        #current-track-title { font-size: 1rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 12px; height: 1.2em; }
+        .player-controls { display: flex; justify-content: space-around; align-items: center; }
+        .player-controls button { background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center; color: inherit; }
+        .player-controls button svg { width: 24px; height: 24px; fill: #555; transition: fill 0.2s; }
+        html.dark-mode .player-controls button svg { fill: #bbb; }
+        .player-controls button:hover svg { fill: #007bff; }
+        .player-controls button#play-pause-btn svg { width: 32px; height: 32px; }
+        
+        .murottal-btn.selected { font-weight: bold; color: #007bff; }
+        html.dark-mode .murottal-btn.selected { color: #58a6ff; }
+        
+        @media (max-width: 768px) {
+            #average-message-desktop { display: none; }
+            #page-circle-of-life, #page-coach-selection { align-items: flex-start; }
+            #page-happy-story, #page-sad-story, #page-member-selection { align-items: center; }
+            #average-message-mobile { display: block; }
+            .page { height: 100vh; overflow-y: auto; }
+            .selection-container, .form-container { width: 100%; padding: 1.5rem; border-radius: 16px; }
+            .grid-container { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+            .coach-item img { width: 120px; height: 120px; }
+            .member-item { font-size: 1.2rem; }
+            .col-container { display: flex; flex-direction: column; gap: 1.5rem; }
+            .col-chart-container { position: sticky; top: 10px; z-index: 10; background-color: var(--container-bg); padding-bottom: 10px; width: auto; min-width: 0; }
+            .col-controls-container { width: 100%; min-width: 0; }
+            h1 { font-size: 1.5rem; } h2 { font-size: 1.2rem; }
+            .thank-you-message { font-size: 1.5rem; } .coach-signature { font-size: 1rem; }
+            #page-circle-of-life .form-container { padding-bottom: 90px; }
+            #page-circle-of-life #back-to-member-btn { float: none; display: block; margin: 2rem auto 0; width: fit-content; }
+            .button-group { flex-direction: column-reverse; gap: 1rem; }
+            .button-group .btn { width: 100%; }
+            #music-player-panel { width: calc(100% - 40px); }
+        }
+    </style>
+</head>
+<body onload="initializeApp()">
+    
+    <audio id="bg-music" loop></audio>
+
+    <div id="music-hint-popup">Atur Audio di Sini! 👇</div>
+
+    <div id="music-player-panel">
+        <div class="player-section">
+            <h4>Musik Latar</h4>
+            <div id="music-controls">
+                <p id="current-track-title">Memuat...</p>
+                <div class="player-controls">
+                    <button id="prev-music-btn" title="Sebelumnya"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
+                    <button id="play-pause-btn" title="Jeda/Putar"></button>
+                    <button id="next-music-btn" title="Selanjutnya"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zm-3.5 6l-8.5 6V6z"></path></svg></button>
+                </div>
+            </div>
+        </div>
+        <div class="player-section">
+            <h4>Murottal</h4>
+            <div id="murottal-list"></div>
+        </div>
+    </div>
+
+    <div id="theme-toggle-btn" title="Ganti Tema">
+        <svg id="icon-sun" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.64 5.64c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41L5.64 2.81c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41L5.64 5.64zm12.73 12.73c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41l-1.41-1.41c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.41 1.41zM2.81 18.36c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41l-1.41-1.41c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.41 1.41zm14.14-14.14c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41l-1.41-1.41c-.39-.39-1.02-.39-1.41 0s-.39 1.02 0 1.41l1.41 1.41z"></path></svg>
+        <svg id="icon-moon" style="display:none;" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5 8.65C6.47 21.5 8.18 22 10 22c5.52 0 10-4.48 10-10S15.52 2 10 2z"></path></svg>
+    </div>
+
+    <div id="audio-control-btn" title="Buka Pengaturan Audio">
+        <svg id="icon-music-player" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path></svg>
+        <svg id="icon-close-player" style="display:none;" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+    </div>
+
+    <div id="page-coach-selection" class="page">
+        <div class="selection-container">
+            <h1>Pilih Coach Kamu</h1>
+            <h2>Astra</h2>
+            <div id="coach-grid-putra" class="grid-container"></div>
+            <h2>Astir</h2>
+            <div id="coach-grid-putri" class="grid-container"></div>
+        </div>
+    </div>
+
+    <div id="page-member-selection" class="page">
+        <div class="selection-container">
+            <h1 id="member-selection-title">Pilih Namamu</h1>
+            <div id="member-list" class="member-list"></div>
+            <button id="back-to-coach-btn" class="btn btn-secondary back-btn"><span>← Kembali Pilih Coach</span></button>
+        </div>
+    </div>
+
+    <div id="page-circle-of-life" class="page">
+        <div class="form-container">
+            <div class="col-container">
+                <div class="col-chart-container">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="col-controls-container">
+                    <h2 id="col-title">Your Circle of Life</h2>
+                    <div id="col-sliders"></div>
+                    <button id="submitBtn" class="btn btn-primary">Lanjut Coachh</button>
+                    <p id="status-message"></p>
+                    <p id="average-message-desktop"></p> 
+                    <button id="open-context-btn" class="context-btn">Apa maksud parameter ini?</button>
+                </div>
+            </div>
+            <button id="back-to-member-btn" class="btn btn-secondary back-btn"><span>← Kembali Pilih Anggota</span></button>
+        </div>
+    </div>
+    
+    <div id="page-happy-story" class="page">
+        <div class="form-container">
+            <h2 id="happy-story-title">Dikit lagi...</h2>
+            <p id="happy-story-prompt">Apa yang bikin kamu senyum belakangan ini? Boleh banget lho berbagi sedikit cerita di sini 😄</p>
+            <textarea id="happy-story-textarea" class="story-textarea" placeholder="Misal: 'Aku seneng banget kemarin bisa video call sama orang tua...'"></textarea>
+            <div class="button-group">
+                <button id="back-to-col-btn" class="btn btn-secondary back-btn"><span>← Kembali ke CoL</span></button>
+                <button id="happy-story-continue-btn" class="btn btn-primary">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-sad-story" class="page">
+        <div class="form-container">
+            <h2 id="sad-story-title">Terakhir nih...</h2>
+            <p id="sad-story-prompt">Kalau ada yang lagi ngeganjel di hati, gak apa-apa kok dikeluarin di sini. Kadang, nulis bisa bikin lega 😊</p>
+            <textarea id="sad-story-textarea" class="story-textarea" placeholder="Misal: 'Aku lagi sedih karena ngerasa tugas kuliah berat banget...'"></textarea>
+            <div class="button-group">
+                 <button id="back-to-happy-btn" class="btn btn-secondary back-btn"><span>← Sebelumnya</span></button>
+                <button id="sad-story-continue-btn" class="btn btn-primary">Verifikasi & Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Konteks Parameter Circle of Life</h2>
+            <dl>
+                <dt>Health (Kesehatan)</dt><dd>Seberapa bugar dan sehat kondisi fisikmu sebulan ini? Pokoknya mencakup pola makan, tidur, dan olahraga.</dd>
+                <dt>Academic (Akademik)</dt><dd>Gimana progres kuliahmu? Apakah kamu merasa lancar dan bisa mengikuti pelajaran dengan baik?</dd>
+                <dt>Family (Keluarga)</dt><dd>Seberapa harmonis hubunganmu dengan keluarga di rumah? Apakah komunikasi berjalan dengan baik? Minimal telepon mereka ya sraa.</dd>
+                <dt>Friends (Teman)</dt><dd>Seberapa baik hubungan sosialmu? Lagi ngambekan kah? Dapet temen baru kah?</dd>
+                <dt>Religion (Ruhiyah)</dt><dd>Gimana iman kamu? Kamu lagi semangat-semangatnya atau merasa futur?</dd>
+                <dt>Organization (Organisasi)</dt><dd>Bagaimana kontribusi dan perkembanganmu di organisasi?</dd>
+                <dt>Self-Love (Cinta Diri)</dt><dd>Seberapa baik kamu menerima dan menghargai dirimu sendiri, baik kelebihan maupun kekurangan?</dd>
+                <dt>Learning (Pembelajaran)</dt><dd>Di luar kuliah, apakah kamu merasa terus belajar hal baru yang bermanfaat untuk pengembangan dirimu?</dd>
+                <dt>Finances (Keuangan)</dt><dd>Seberapa aman dan tercukupi kondisi keuanganmu? Apakah kamu bisa mengelolanya dengan baik?</dd>
+                <dt>Spirit (Semangat)</dt><dd>Seberapa tinggi semangat dan motivasimu untuk menjalani hari-hari dan meraih cita-cita?</dd>
+            </dl>
+            <button id="close-context-btn" class="btn btn-secondary" style="float: right;">Tutup</button>
+        </div>
+    </div>
+
+    <div id="page-thank-you" class="page">
+        <div class="selection-container thank-you-container">
+            <p id="thank-you-message" class="thank-you-message"></p>
+            <p id="coach-signature" class="coach-signature"></p>
+        </div>
+    </div>
+
+    <div id="voice-verify-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h2>Eitss, ini beneran kamu?</h2>
+            <p id="voice-prompt-message">Ucapkan Subhanallah/Alhamdulillah/Allahu akbar minimal 3x ya dengan memencet tombol mic supaya coach tau ini beneran kamu.</p>
+            <button id="mic-btn">🎤</button>
+            <p id="voice-status"></p>
+            <div>
+                <button id="voice-submit-btn" class="btn btn-success" disabled>Alhamdulillah aku dzikir hari ini!</button>
+                <button id="voice-close-btn" class="btn btn-secondary">Eh ulang</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="average-message-mobile"></div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfzFnGhGNkoQD1aoIyaDT2vUnTAEFR1NQPzw0OpIn-1LOfVMnDH_zIOt9AvtZFAQJPXg/exec';
+    const coachingData = { "Astra": { "Master Andrew": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/1.gif", anggota: ["Uwais", "Hafizh", "Daffa", "Galang", "Icad"]}, "Master Brimo": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/2.gif", anggota: ["Aep", "Ilham", "Ditok", "Yazid", "Irshad"]}, "Master Zhorof": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/3.gif", anggota: ["Dio", "Mamad", "Alif", "Aji", "Aufa"]}, "Master Bear": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/4.gif", anggota: ["Zamil", "Riki", "Hanif", "Tahmid", "Hamdan"]} }, "Astir": { "Master Nads": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/5.gif", anggota: ["Aqeela", "Aza", "Berlia", "Haura", "Arin"]}, "Master Green": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/6.gif", anggota: ["Izza", "Tifa", "Khansa", "Nabila", "Aliynt"]}, "Master Emily": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/7.gif", anggota: ["Zulfa", "Kuny", "Nisa", "Jidah", "Maisya"]}, "Master Mars": { gif: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/8.gif", anggota: ["Yara", "Annisa", "Raudah", "Aisyah", "Raisya"]} } };
+    const coachSignatures = { "Master Andrew": "Andre", "Master Zhorof": "Zhorif", "Master Brimo": "Bara", "Master Bear": "Bey", "Master Nads": "Nadia", "Master Mars": "Marsaa", "Master Emily": "Amal", "Master Green": "Aspi" };
+    
+    const coachThemes = {
+        "Master Andrew": { bgStart: "#141e30", bgEnd: "#35577d", containerStart: "#35577d", containerEnd: "#141e30", shadow: "rgba(0, 0, 0, 0.3)" },
+        "Master Brimo":  { bgStart: "#2d1e2f", bgEnd: "#4e2a4f", containerStart: "#4e2a4f", containerEnd: "#2d1e2f", shadow: "rgba(0, 0, 0, 0.15)" },
+        "Master Zhorof": { bgStart: "#3f1d38", bgEnd: "#af5279", containerStart: "#af5279", containerEnd: "#3f1d38", shadow: "rgba(0, 0, 0, 0.15)" },
+        "Master Bear":   { bgStart: "#2c3e50", bgEnd: "#b08d57", containerStart: "#b08d57", containerEnd: "#2c3e50", shadow: "rgba(0, 0, 0, 0.3)" },
+        "Master Nads":   { bgStart: "#2e1f18", bgEnd: "#5e4b43", containerStart: "#5e4b43", containerEnd: "#2e1f18", shadow: "rgba(0, 0, 0, 0.3)" },
+        "Master Green":  { bgStart: "#0f2027", bgEnd: "#28623a", containerStart: "#28623a", containerEnd: "#0f2027", shadow: "rgba(0, 0, 0, 0.3)" },
+        "Master Emily":  { bgStart: "#2c0f12", bgEnd: "#681e23", containerStart: "#681e23", containerEnd: "#2c0f12", shadow: "rgba(0, 0, 0, 0.3)" },
+        "Master Mars":   { bgStart: "#3e2f5b", bgEnd: "#e94560", containerStart: "#e94560", containerEnd: "#3e2f5b", shadow: "rgba(0, 0, 0, 0.3)" }
+    };
+
+    const musicTracks = [
+        { title: "Ballad of Many Waters", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/music1.mp3" },
+        { title: "Clement Rillet", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/music2.mp3" },
+        { title: "Nocturnal Illumination", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/music3.mp3" },
+        { title: "Ann's Quiescent Residence", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/music4.mp3" }
+    ];
+
+    const murottalTracks = [
+        { title: "QS. As-Shaf", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/murottal1.mp3" },
+        { title: "QS. Al-Jumu'ah", url: "https://pub-d27e4354b00f442090127e61c8ba9786.r2.dev/murottal2.mp3" }
+    ];
+    
+    const svgIcons = {
+        play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>',
+        pause: '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>',
+        murottalPlay: '<svg viewBox="0 0 24 24" style="width:18px; height:18px; margin-right:8px;"><path d="M8 5v14l11-7z"></path></svg>'
+    };
+
+    let musicPlayerState = {
+        currentMusicIndex: 0,
+        currentMurottal: null,
+        isPlaying: false,
+    };
+    
+    const soundUrls = { sliders: [ 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/1.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/2.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/3.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/6.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/5.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/7.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/1.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/6.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/2.MP3', 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/7.MP3' ], coachHover: 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/3.MP3', memberHover: 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/2.MP3', cancelClick: 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/4.MP3', confirmClick: 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/9.MP3', selectClick: 'https://raw.githubusercontent.com/AndrerezaMedya/balladofmanywaters/main/9.MP3' };
+    
+    let myChart = null, selectedCoach = null, selectedMember = null, submitBtn = null, statusMessage = null,
+        contextModal = null, averageMessageElement = null;
+    
+    async function getFingerprintId() {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        return result.visitorId;
+    }
+
+    let audioContext;
+    const audioBuffers = { sliders: [] };
+    let soundsLoaded = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioBase64 = null;
+
+    async function loadSounds() {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const allPromises = [];
+            for (const key in soundUrls) {
+                if (key === 'sliders') {
+                    soundUrls.sliders.forEach((url, index) => {
+                        allPromises.push(fetch(url).then(r => r.arrayBuffer()).then(b => audioContext.decodeAudioData(b)).then(buffer => audioBuffers.sliders[index] = buffer));
+                    });
+                } else {
+                    allPromises.push(fetch(soundUrls[key]).then(r => r.arrayBuffer()).then(b => audioContext.decodeAudioData(b)).then(buffer => audioBuffers[key] = buffer));
+                }
+            }
+            await Promise.all(allPromises);
+            soundsLoaded = true;
+        } catch (error) { console.error("Gagal memuat efek suara:", error); }
+    }
+    
+    function playSound(soundName, index = null) {
+        if (!soundsLoaded) return;
+        if (audioContext.state === 'suspended') { audioContext.resume(); }
+        let bufferToPlay = (soundName === 'sliders') ? audioBuffers.sliders[index] : audioBuffers[soundName];
+        if (bufferToPlay) {
+            const source = audioContext.createBufferSource();
+            source.buffer = bufferToPlay;
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+    }
+    
+    let currentPageId = 'page-coach-selection';
+    
+    const bgMusic = document.getElementById('bg-music');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const trackTitleEl = document.getElementById('current-track-title');
+
+    function loadTrack(type, index, shouldPlay = true) {
+        let track;
+        if (type === 'music') {
+            bgMusic.loop = true;
+            musicPlayerState.currentMurottal = null;
+            musicPlayerState.currentMusicIndex = index;
+            track = musicTracks[index];
+        } else { // murottal
+            bgMusic.loop = false;
+            musicPlayerState.currentMurottal = index;
+            track = murottalTracks[index];
+        }
+        
+        trackTitleEl.textContent = track.title;
+        bgMusic.src = track.url;
+        bgMusic.load(); // Explicitly load the new source
+
+        if (shouldPlay) {
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error("Audio playback error:", error);
+                    }
+                });
+            }
+            musicPlayerState.isPlaying = true;
+        } else {
+            musicPlayerState.isPlaying = false;
+        }
+        updateUI();
+    }
+
+    function togglePlayPause() {
+        if (bgMusic.paused) {
+            bgMusic.play();
+            musicPlayerState.isPlaying = true;
+        } else {
+            bgMusic.pause();
+            musicPlayerState.isPlaying = false;
+        }
+        updateUI();
+    }
+    
+    function playNextMusic() {
+        let newIndex = musicPlayerState.currentMusicIndex + 1;
+        if (newIndex >= musicTracks.length) {
+            newIndex = 0;
+        }
+        loadTrack('music', newIndex);
+    }
+    
+    function playPrevMusic() {
+        let newIndex = musicPlayerState.currentMusicIndex - 1;
+        if (newIndex < 0) {
+            newIndex = musicTracks.length - 1;
+        }
+        loadTrack('music', newIndex);
+    }
+
+    function updateUI() {
+        playPauseBtn.innerHTML = musicPlayerState.isPlaying ? svgIcons.pause : svgIcons.play;
+        
+        const murottalBtns = document.querySelectorAll('.murottal-btn');
+        murottalBtns.forEach((btn, index) => {
+            btn.classList.toggle('selected', index === musicPlayerState.currentMurottal);
+        });
+    }
+
+    function setupStandaloneThemeToggle() {
+        const toggleBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('icon-sun');
+        const moonIcon = document.getElementById('icon-moon');
+        const docHtml = document.documentElement;
+        
+        const applyTheme = (isDark) => {
+            docHtml.classList.toggle('dark-mode', isDark);
+            sunIcon.style.display = isDark ? 'none' : 'block';
+            moonIcon.style.display = isDark ? 'block' : 'none';
+            localStorage.setItem('themePreference', isDark ? 'dark' : 'light');
+        };
+
+        const preferredTheme = localStorage.getItem('themePreference');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Initial load
+        if (preferredTheme) {
+            applyTheme(preferredTheme === 'dark');
+        } else {
+            applyTheme(systemPrefersDark);
+        }
+
+        // Event listener
+        toggleBtn.addEventListener('click', () => {
+            applyTheme(!docHtml.classList.contains('dark-mode'));
+        });
+    }
+
+
+    function initializePlayer() {
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        document.getElementById('next-music-btn').addEventListener('click', playNextMusic);
+        document.getElementById('prev-music-btn').addEventListener('click', playPrevMusic);
+        
+        bgMusic.addEventListener('ended', () => {
+            if (musicPlayerState.currentMurottal !== null) {
+                musicPlayerState.isPlaying = false;
+                updateUI();
+            } else {
+                playNextMusic();
+            }
+        });
+        
+        const murottalList = document.getElementById('murottal-list');
+        murottalTracks.forEach((track, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'player-controls murottal-btn';
+            btn.innerHTML = `${svgIcons.murottalPlay} ${track.title}`;
+            btn.onclick = () => loadTrack('murottal', index);
+            murottalList.appendChild(btn);
+        });
+
+        loadTrack('music', 0, false);
+
+        document.body.addEventListener('click', () => {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            if (bgMusic.paused && !musicPlayerState.isPlaying) {
+                togglePlayPause();
+            }
+        }, { once: true });
+    }
+
+    function setupPlayerPanel() {
+        const audioBtn = document.getElementById('audio-control-btn');
+        const panel = document.getElementById('music-player-panel');
+        const iconMusic = document.getElementById('icon-music-player');
+        const iconClose = document.getElementById('icon-close-player');
+
+        audioBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = panel.classList.toggle('visible');
+            audioBtn.classList.toggle('panel-open', isOpen);
+            iconMusic.style.display = isOpen ? 'none' : 'block';
+            iconClose.style.display = isOpen ? 'block' : 'none';
+            audioBtn.title = isOpen ? 'Tutup Pengaturan Audio' : 'Buka Pengaturan Audio';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!panel.contains(e.target) && !audioBtn.contains(e.target)) {
+                if(panel.classList.contains('visible')) {
+                   audioBtn.click();
+                }
+            }
+        });
+        
+        const hintPopup = document.getElementById('music-hint-popup');
+        setTimeout(() => {
+            hintPopup.classList.add('show');
+            setTimeout(() => {
+                hintPopup.classList.remove('show');
+            }, 5000);
+        }, 1500);
+    }
+    
+    function initializeApp() {
+        loadSounds();
+        initializePlayer();
+        setupPlayerPanel();
+        setupStandaloneThemeToggle();
+
+        gsap.set(document.getElementById(currentPageId), { opacity: 1, visibility: 'visible' });
+        submitBtn = document.getElementById('submitBtn');
+        statusMessage = document.getElementById('status-message');
+        contextModal = document.getElementById('context-modal');
+        const voiceVerifyModal = document.getElementById('voice-verify-modal');
+        averageMessageElement = document.getElementById('average-message');
+        
+        const micBtn = document.getElementById('mic-btn');
+        const voiceStatus = document.getElementById('voice-status');
+        const voiceSubmitBtn = document.getElementById('voice-submit-btn');
+        const voiceCloseBtn = document.getElementById('voice-close-btn');
+        const voicePromptMessage = document.getElementById('voice-prompt-message');
+
+        const openContextBtn = document.getElementById('open-context-btn');
+        openContextBtn.addEventListener('click', () => { contextModal.style.display = 'flex'; });
+        const closeContextBtn = document.getElementById('close-context-btn');
+        closeContextBtn.addEventListener('click', () => { contextModal.style.display = 'none'; });
+
+        const coachGridPutra = document.getElementById('coach-grid-putra');
+        const coachGridPutri = document.getElementById('coach-grid-putri');
+        for (const coachName in coachingData.Astra) {
+            const coach = coachingData.Astra[coachName];
+            const coachElement = document.createElement('div');
+            coachElement.className = 'coach-item';
+            coachElement.innerHTML = `<img src="${coach.gif}" alt="Foto ${coachName}"><p>${coachName}</p>`;
+            coachElement.addEventListener('click', () => selectCoach(coachName, 'Astra'));
+            coachGridPutra.appendChild(coachElement);
+        }
+        for (const coachName in coachingData.Astir) {
+            const coach = coachingData.Astir[coachName];
+            const coachElement = document.createElement('div');
+            coachElement.className = 'coach-item';
+            coachElement.innerHTML = `<img src="${coach.gif}" alt="Foto ${coachName}"><p>${coachName}</p>`;
+            coachElement.addEventListener('click', () => selectCoach(coachName, 'Astir'));
+            coachGridPutri.appendChild(coachElement);
+        }
+        
+        document.getElementById('back-to-coach-btn').addEventListener('click', backToCoachSelection);
+        document.getElementById('back-to-member-btn').addEventListener('click', backToMemberSelection);
+        
+        document.getElementById('back-to-col-btn').addEventListener('click', () => switchPage('page-circle-of-life'));
+        document.getElementById('back-to-happy-btn').addEventListener('click', () => switchPage('page-happy-story'));
+
+        submitBtn.addEventListener('click', () => {
+            const memberNameParts = selectedMember.split(' ');
+            const memberNickName = memberNameParts.length > 1 ? memberNameParts.slice(1).join(' ') : selectedMember;
+            document.getElementById('happy-story-prompt').textContent = `${memberNickName}, apa yang bikin kamu senyum belakangan ini? Boleh banget lhoo berbagi sedikit cerita di sini 😄`;
+            switchPage('page-happy-story');
+        });
+
+        document.getElementById('happy-story-continue-btn').addEventListener('click', () => {
+             const memberNameParts = selectedMember.split(' ');
+            const memberNickName = memberNameParts.length > 1 ? memberNameParts.slice(1).join(' ') : selectedMember;
+            document.getElementById('sad-story-prompt').textContent = `${memberNickName}, kalau ada yang lagi ngeganjel di hati, gak apa-apa kok dikeluarin di sini. Kadang, nulis bisa bikin lega. Feel free yaa ${memberNickName} 😊`;
+            switchPage('page-sad-story');
+        });
+        
+        document.getElementById('sad-story-continue-btn').addEventListener('click', () => {
+            audioChunks = [];
+            audioBase64 = null;
+            voiceSubmitBtn.disabled = true;
+            voiceCloseBtn.disabled = false;
+            micBtn.disabled = false;
+            micBtn.style.background = '#dc3545';
+            micBtn.textContent = '🎤';
+            voiceStatus.textContent = "Tekan mic untuk mulai merekam";
+            
+            const memberNameParts = selectedMember.split(' ');
+            const memberNickName = memberNameParts.length > 1 ? memberNameParts.slice(1).join(' ') : selectedMember;
+            voicePromptMessage.innerHTML = `Ucapkan <strong>Subhanallah/Alhamdulillah/Allahu Akbar</strong> minimal <strong>3x</strong> ya dengan memencet tombol mic supaya coach tau ini beneran <strong>${memberNickName}</strong>`;
+            voiceVerifyModal.style.display = 'flex';
+        });
+
+
+        voiceCloseBtn.addEventListener('click', () => { voiceVerifyModal.style.display = 'none'; });
+        voiceSubmitBtn.addEventListener('click', () => {
+            if (audioBase64) {
+                voiceStatus.textContent = "Oke sipp sebentar ya sra...";
+                voiceSubmitBtn.disabled = true;
+                voiceCloseBtn.disabled = true;
+                submitFinalData(audioBase64);
+            }
+        });
+
+        micBtn.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                micBtn.disabled = true;
+                micBtn.style.background = '#6c757d';
+                voiceStatus.textContent = "Perekaman selesai. Klik 'Kirim' untuk submit.";
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    micBtn.style.background = '#28a745';
+                    micBtn.textContent = '■';
+                    voiceStatus.textContent = "Sedang merekam... Klik lagi untuk berhenti.";
+                    mediaRecorder.addEventListener("dataavailable", event => { audioChunks.push(event.data); });
+                    mediaRecorder.addEventListener("stop", () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = function() {
+                            audioBase64 = reader.result.split(',')[1];
+                            voiceSubmitBtn.disabled = false;
+                        };
+                        stream.getTracks().forEach(track => track.stop());
+                    });
+                } catch (err) {
+                    voiceStatus.textContent = "Error: Izin mikrofon ditolak atau tidak ditemukan.";
+                    console.error("Error accessing microphone:", err);
+                }
+            }
+        });
+        
+        document.body.addEventListener('click', (event) => {
+            const buttonTarget = event.target.closest('button');
+            if (buttonTarget) {
+                if (['back-to-coach-btn', 'back-to-member-btn', 'voice-close-btn', 'close-context-btn', 'back-to-col-btn', 'back-to-happy-btn'].includes(buttonTarget.id)) {
+                    playSound('cancelClick');
+                } else if (['submitBtn', 'voice-submit-btn', 'happy-story-continue-btn', 'sad-story-continue-btn'].includes(buttonTarget.id)) {
+                    playSound('confirmClick');
+                }
+            }
+            const selectionTarget = event.target.closest('.coach-item, .member-item');
+            if (selectionTarget) { playSound('selectClick'); }
+        });
+        document.body.addEventListener('mouseover', (event) => {
+            const target = event.target;
+            const coachItem = target.closest('.coach-item');
+            const memberItem = target.closest('.member-item');
+            if (coachItem && !coachItem.hasAttribute('data-hover-sound-played')) { playSound('coachHover'); coachItem.setAttribute('data-hover-sound-played', 'true');
+            } else if (memberItem && !memberItem.hasAttribute('data-hover-sound-played')) { playSound('memberHover'); memberItem.setAttribute('data-hover-sound-played', 'true'); }
+        });
+        document.body.addEventListener('mouseout', (event) => { const item = event.target.closest('.coach-item, .member-item'); if(item) item.removeAttribute('data-hover-sound-played'); });
+    }
+
+    function applyTheme(theme) {
+        const root = document.documentElement;
+        const body = document.body;
+        const applyAndFadeIn = () => {
+            root.style.setProperty('--bg-start', theme.bgStart);
+            root.style.setProperty('--bg-end', theme.bgEnd);
+            root.style.setProperty('--container-start', theme.containerStart);
+            root.style.setProperty('--container-end', theme.containerEnd);
+            root.style.setProperty('--shadow-color', theme.shadow);
+            setTimeout(() => { body.classList.add('theme-active'); }, 10);
+        };
+        if (body.classList.contains('theme-active')) {
+            body.classList.remove('theme-active');
+            setTimeout(applyAndFadeIn, 800);
+        } else {
+            applyAndFadeIn();
+        }
+    }
+
+    function resetTheme() {
+        const root = document.documentElement;
+        root.style.removeProperty('--bg-start');
+        root.style.removeProperty('--bg-end');
+        root.style.removeProperty('--container-start');
+        root.style.removeProperty('--container-end');
+        root.style.removeProperty('--shadow-color');
+        document.body.classList.remove('theme-active');
+    }
+
+    function switchPage(nextPageId) {
+        window.scrollTo(0, 0);
+        document.body.style.overflow = 'hidden'; 
+        const currentPage = document.getElementById(currentPageId);
+        const nextPage = document.getElementById(nextPageId);
+        if (!currentPage || !nextPage || currentPageId === nextPageId) return;
+        if (nextPage.scrollTop) { nextPage.scrollTop = 0; }
+        const tl = gsap.timeline({ onComplete: () => { const contentContainer = nextPage.querySelector('.selection-container, .form-container'); if (contentContainer) { const contentHeight = contentContainer.scrollHeight; const windowHeight = window.innerHeight; if (contentHeight > windowHeight) { document.body.style.overflow = 'auto'; } } } });
+        tl.to(currentPage, { opacity: 0, y: -30, duration: 0.4, ease: "power2.inOut", onComplete: () => { gsap.set(currentPage, { visibility: 'hidden' }); } });
+        tl.fromTo(nextPage, { y: 30, opacity: 0, visibility: 'visible' }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.inOut" }, ">-0.2");
+        const avgMessage = document.getElementById('average-message-mobile');
+        const audioBtn = document.getElementById('audio-control-btn');
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        const playerPanel = document.getElementById('music-player-panel');
+        const hintPopup = document.getElementById('music-hint-popup');
+
+        if (nextPageId === 'page-circle-of-life') {
+            avgMessage.classList.add('visible-mobile');
+            audioBtn.style.bottom = '85px';
+            themeBtn.style.bottom = '85px';
+            playerPanel.style.bottom = '145px';
+            hintPopup.style.bottom = '145px';
+        } else {
+            avgMessage.classList.remove('visible-mobile');
+            audioBtn.style.bottom = '20px';
+            themeBtn.style.bottom = '20px';
+            playerPanel.style.bottom = '80px';
+            hintPopup.style.bottom = '80px';
+        }
+        currentPageId = nextPageId;
+    }
+    
+    function backToCoachSelection() { resetTheme(); selectedCoach = null; switchPage('page-coach-selection'); }
+    function backToMemberSelection() { selectedMember = null; switchPage('page-member-selection'); }
+
+    function selectCoach(coachName, gender) {
+        selectedCoach = coachName;
+        applyTheme(coachThemes[coachName]);
+        switchPage('page-member-selection');
+        
+        const memberList = document.getElementById('member-list');
+        const memberTitle = document.getElementById('member-selection-title');
+        memberList.innerHTML = '';
+        const coachNickName = coachSignatures[coachName] || coachName;
+        
+        document.getElementById('sad-story-continue-btn').textContent = `Sudaaa Coach ${coachNickName} 😁`;
+        
+        memberTitle.innerText = `Pilih Namamu (EmCeKa ${coachNickName})`;
+        const members = coachingData[gender][coachName].anggota;
+        members.forEach(memberName => { 
+            const memberElement = document.createElement('div'); 
+            memberElement.className = 'member-item'; 
+            memberElement.innerText = memberName; 
+            memberElement.addEventListener('click', () => selectMember(memberName)); 
+            memberList.appendChild(memberElement); 
+        });
+    }
+
+    function selectMember(memberName) { 
+        selectedMember = memberName; 
+        switchPage('page-circle-of-life'); 
+        document.getElementById('col-title').innerText = `Circle of Life - ${selectedMember}`; 
+        initializeCircleOfLife(); 
+    }
+    
+    function getAverageMessage(avgScore) {
+        if (avgScore >= 1 && avgScore < 3) return "Ya Allah kenapa aku WNI "; if (avgScore >= 3 && avgScore < 4) return "Capeeekk banget..."; if (avgScore >= 4 && avgScore < 5) return "Hidup kok gini amat ya :'"; if (avgScore >= 5 && avgScore < 7) return "Apapun keadaannya, Alhamdulillah :)"; if (avgScore >= 7 && avgScore < 8) return "Miaw miaw miaw miaw~"; if (avgScore >= 8 && avgScore <= 10) return "Alhamdulillah, hidup ini penuh berkah! ✨"; return "";
+    }
+
+    function updateAverageMessage(avgScore) { const message = getAverageMessage(avgScore); const desktopEl = document.getElementById('average-message-desktop'); const mobileEl = document.getElementById('average-message-mobile'); if (desktopEl) { desktopEl.innerText = message; } if (mobileEl) { mobileEl.innerText = message; } }
+
+    function initializeCircleOfLife() {
+        const categories = ['Health', 'Academic', 'Family', 'Friends', 'Religion', 'Organization', 'Self-Love', 'Learning', 'Finances', 'Spirit'];
+        const initialData = Array(categories.length).fill(5);
+        const slidersContainer = document.getElementById('col-sliders');
+        slidersContainer.innerHTML = '';
+        categories.forEach((category, index) => { const group = document.createElement('div'); group.className = 'control-group'; group.innerHTML = `<label for="${category}"><span>${category}</span><span id="value-${category}">${initialData[index]}</span></label><input type="range" id="${category}" min="1" max="10" value="${initialData[index]}" data-index="${index}">`; slidersContainer.appendChild(group); });
+        
+        const initialAvg = initialData.reduce((sum, current) => sum + current, 0) / initialData.length;
+        updateAverageMessage(initialAvg);
+
+        const getSliderColor = (value) => `hsl(${(value - 1) * 13}, 80%, 50%)`;
+
+        const allSliders = slidersContainer.querySelectorAll('input[type="range"]');
+        allSliders.forEach(slider => {
+            const value = slider.value;
+            const percent = ((value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.setProperty('--slider-color', getSliderColor(value));
+            slider.style.setProperty('--slider-percent', `${percent}%`);
+        });
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (myChart) { myChart.destroy(); }
+        const initialColor = { background: 'rgba(50, 150, 200, 0.4)', border: 'rgb(50, 150, 200)' };
+        myChart = new Chart(ctx, { type: 'radar', data: { labels: categories, datasets: [{ label: 'My Life Score', data: [...initialData], fill: true, backgroundColor: initialColor.background, borderColor: initialColor.border, pointBackgroundColor: initialColor.border, pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: initialColor.border }] }, options: { elements: { line: { tension: 0.4 } }, scales: { r: { suggestedMin: 0, suggestedMax: 10, grid: { color: '#e0e0e0' }, angleLines: { color: '#e0e0e0' }, pointLabels: { color: '#333', font: { size: 13, weight: 'bold' } }, ticks: { stepSize: 1, backdropColor: 'transparent', color: '#666' } } } } });
+        
+        slidersContainer.addEventListener('input', (event) => {
+            if (event.target.type === 'range') {
+                const slider = event.target;
+                const index = slider.dataset.index;
+                playSound('sliders', index);
+                const value = slider.value;
+
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(5);
+                }
+
+                const percent = ((value - slider.min) / (slider.max - slider.min)) * 100;
+                slider.style.setProperty('--slider-color', getSliderColor(value));
+                slider.style.setProperty('--slider-percent', `${percent}%`);
+                document.getElementById(`value-${slider.id}`).textContent = value;
+                
+                const dataPoints = myChart.data.datasets[0].data;
+                dataPoints[index] = parseInt(value, 10);
+                myChart.update();
+                
+                const avg = dataPoints.reduce((sum, current) => sum + current, 0) / dataPoints.length;
+                updateAverageMessage(avg);
+            }
+        });
+    }
+
+    async function submitFinalData(audioBase64) {
+        const categories = ['Health', 'Academic', 'Family', 'Friends', 'Religion', 'Organization', 'Self-Love', 'Learning', 'Finances', 'Spirit'];
+        let ipAddress = 'not-collected';
+        try { const response = await fetch('https://api.ipify.org?format=json'); const data = await response.json(); ipAddress = data.ip; } catch (error) { console.error("Gagal mendapatkan IP Address:", error); }
+
+        const finalData = { 
+            coach: selectedCoach, 
+            anggota: selectedMember,
+            browserId: await getFingerprintId(),
+            ipAddress: ipAddress,
+            audioData: audioBase64,
+            audioMimeType: 'audio/webm',
+            happyStory: document.getElementById('happy-story-textarea').value,
+            sadStory: document.getElementById('sad-story-textarea').value
+        };
+        categories.forEach((category, index) => { const key = category.replace('-', ''); finalData[key] = myChart.data.datasets[0].data[index]; });
+        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalData) })
+        .then(onSuccess)
+        .catch(onFailure);
+    }
+    
+    function onSuccess(response) {
+        const voiceVerifyModal = document.getElementById('voice-verify-modal');
+        voiceVerifyModal.style.display = 'none';
+        const memberNameParts = selectedMember.split(' ');
+        const memberNickName = memberNameParts.length > 1 ? memberNameParts.slice(1).join(' ') : selectedMember;
+        const coachNickName = coachSignatures[selectedCoach] || selectedCoach;
+        document.getElementById('thank-you-message').innerText = `Terimakasiii ${memberNickName} 😊✨ Sampai jumpa di HTH yaa!!`;
+        document.getElementById('coach-signature').innerText = `~ Coach ${coachNickName}`;
+        switchPage('page-thank-you');
+    }
+
+    function onFailure(error) {
+        const voiceVerifyModal = document.getElementById('voice-verify-modal');
+        voiceVerifyModal.style.display = 'none';
+        const voiceSubmitBtn = document.getElementById('voice-submit-btn');
+        const voiceCloseBtn = document.getElementById('voice-close-btn');
+        const voiceStatus = document.getElementById('voice-status');
+        if(voiceSubmitBtn) voiceSubmitBtn.disabled = false;
+        if(voiceCloseBtn) voiceCloseBtn.disabled = false;
+        if(voiceStatus) voiceStatus.textContent = "Gagal mengirim, coba lagi.";
+    }
+</script>
+</body>
+</html>
+
